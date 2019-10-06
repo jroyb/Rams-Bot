@@ -21,7 +21,6 @@ client = discord.Client()
 async def on_message(message):
     if (isinstance(message.channel, discord.DMChannel)
             and message.content.startswith('!sendid')):
-        #   Sends the ID directly to me (smile#7677)
         channel = client.get_channel(627705526167404544)
         await channel.send(str(message.author) + ': ' + str(message.author.id))
     elif (isinstance(message.channel, discord.DMChannel)
