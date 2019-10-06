@@ -1,2 +1,2 @@
-# RyEng-Bot
+# Rams-Bot
 Ryerson Engineering Discord Server BOT
