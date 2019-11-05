@@ -1,0 +1,1 @@
+                    await member.send(str(msg.author) + ": " + msg.content)

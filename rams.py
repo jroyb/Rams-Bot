@@ -113,6 +113,22 @@ async def on_message(message):
         await message.channel.send(
             'ValueError Exception: Invalid command.\n\n!commands to list commands'
         )
+    """
+    elif (isinstance(message.channel, discord.DMChannel)
+          and message.content.startswith("!postRules")
+          and message.author.id == admins[0]):
+        f = open('rules.txt', 'r')
+        if f.mode == 'r':
+            contents = f.read()
+
+            embed = discord.Embed(title="Miscellaneous Information",
+                                  color=embedColours[4],
+                                  description=contents)
+            embed.set_thumbnail(url=client.get_guild(serverID).icon_url)
+
+            channel = client.get_channel(365556335166881792)
+            await channel.send(embed=embed)
+    """
 
 
 # REQUIRES: A Message of type Discord.Message and an integer
