@@ -5,7 +5,7 @@ import datetime
 # COPYRIGHT 2019 198938374822821888 & 365621509450104851
 # Designed and developed for the RyEng discord server.
 
-TOKEN = 'xxxxx'
+TOKEN = ''
 
 # RyEng Server ID
 serverID = 365554916451811341
@@ -33,7 +33,8 @@ serverLog = 484401067862392852
 # 0xFF0055 Red (On Member Leave)
 # 0x9900FF Electric Purple (Delete/Edit Message)
 # 0x8AFF00 Chartreuse (Nickname Change)
-embedColours = [0x00FFC8, 0xFF0055, 0x9900FF, 0x8AF00]
+# 0x008080 Teal (Resource Post)
+embedColours = [0x00FFC8, 0xFF0055, 0x9900FF, 0x8AF00, 0x008080]
 
 client = discord.Client()
 
@@ -86,7 +87,7 @@ async def on_message(message):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Resource Posted', color=embedColours[2])
+        embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='1st Year Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
@@ -107,7 +108,7 @@ async def on_message(message):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Resource Posted', color=embedColours[2])
+        embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='2nd Year Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
@@ -128,7 +129,7 @@ async def on_message(message):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Resource Posted', color=embedColours[2])
+        embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='3rd Year Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
@@ -149,7 +150,7 @@ async def on_message(message):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Resource Posted', color=embedColours[2])
+        embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='4th Year Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
@@ -171,7 +172,7 @@ async def on_message(message):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Resource Posted', color=embedColours[2])
+        embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='Other Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
@@ -405,7 +406,7 @@ async def targetAdmin(id):
 #          passed in the argument matches with a server member.
 #          Returns None otherwise.
 async def targetMember(username):
-    server = client.get_guild(627700379286634536)
+    server = client.get_guild(serverID)
 
     for member in server.members:
         if (username == str(member)):
