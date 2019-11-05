@@ -76,7 +76,6 @@ async def on_message(message):
             inline=False)
 
         await message.channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post1y")):
         #sends it to test server general
@@ -97,7 +96,6 @@ async def on_message(message):
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post2y")):
         #sends it to test server general
@@ -118,7 +116,6 @@ async def on_message(message):
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post3y")):
         #sends it to test server general
@@ -139,7 +136,6 @@ async def on_message(message):
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post4y")):
         #sends it to test server general
@@ -160,7 +156,6 @@ async def on_message(message):
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!postOther")):
         #sends it to test server to a test channel
@@ -182,7 +177,6 @@ async def on_message(message):
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
-
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!")):
         await message.channel.send(
