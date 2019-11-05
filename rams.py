@@ -90,9 +90,9 @@ async def on_message(message):
         embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='1st Year Resource Information',
-                    value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[7:]),
-                    inline=False)
+                        value='__**User:**__ ' + str(message.author.mention) +
+                        '\n__**Contents:**__ ' + str(message.content[7:]),
+                        inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
         channel = client.get_channel(serverLog)
@@ -111,9 +111,9 @@ async def on_message(message):
         embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='2nd Year Resource Information',
-                    value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[7:]),
-                    inline=False)
+                        value='__**User:**__ ' + str(message.author.mention) +
+                        '\n__**Contents:**__ ' + str(message.content[7:]),
+                        inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
         channel = client.get_channel(serverLog)
@@ -132,9 +132,9 @@ async def on_message(message):
         embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='3rd Year Resource Information',
-                    value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[7:]),
-                    inline=False)
+                        value='__**User:**__ ' + str(message.author.mention) +
+                        '\n__**Contents:**__ ' + str(message.content[7:]),
+                        inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
         channel = client.get_channel(serverLog)
@@ -153,9 +153,9 @@ async def on_message(message):
         embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='4th Year Resource Information',
-                    value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[7:]),
-                    inline=False)
+                        value='__**User:**__ ' + str(message.author.mention) +
+                        '\n__**Contents:**__ ' + str(message.content[7:]),
+                        inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
         channel = client.get_channel(serverLog)
@@ -175,9 +175,9 @@ async def on_message(message):
         embed = discord.Embed(title='Resource Posted', color=embedColours[4])
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='Other Resource Information',
-                    value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[10:]),
-                    inline=False)
+                        value='__**User:**__ ' + str(message.author.mention) +
+                        '\n__**Contents:**__ ' + str(message.content[10:]),
+                        inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
         channel = client.get_channel(serverLog)
@@ -185,7 +185,9 @@ async def on_message(message):
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!")):
-        await message.channel.send('ValueError Exception: Invalid command.\n\n!commands to list commands')
+        await message.channel.send(
+            'ValueError Exception: Invalid command.\n\n!commands to list commands'
+        )
 
 
 # REQUIRES: A Message of type Discord.Message
