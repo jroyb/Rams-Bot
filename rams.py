@@ -337,8 +337,7 @@ async def sendMessage(message):
             # Send to an admin...
             for member in server.members:
                 if (member.id == admin):
-                    await member.send(str(msg.author))
-                    await member.send(msg.content)
+                    await member.send(str(msg.author) + ": " + msg.content)
                     break
 
             # Tell user that their message was sent
