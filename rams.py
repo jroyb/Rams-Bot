@@ -176,7 +176,7 @@ async def on_message(message):
         embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(name='Other Resource Information',
                     value='__**User:**__ ' + str(message.author.mention) +
-                    '\n__**Contents:**__ ' + str(message.content[7:]),
+                    '\n__**Contents:**__ ' + str(message.content[10:]),
                     inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
 
