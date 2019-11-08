@@ -5,29 +5,25 @@ import datetime
 # COPYRIGHT 2019 198938374822821888 & 365621509450104851
 # Designed and developed for the RyEng discord server.
 
-TOKEN = ''
+TOKEN = 'NjI3MjY1NjA1NzkxMjUyNTEy.XcHhBw.DZiMTK5JU_k_vR2LjCaTKEgqnCs'
 
 # RyEng Server ID
 serverID = 365554916451811341
 
-# 365621509450104851 poofy#6421
-# 295610195923697666 kam#2959
-# 130400795668512768 Minibeat_UwU#2257
-# 198938374822821888 smile#7677
-# 276844714844618772 Ryhan#9128
-admins = [
-    198938374822821888, 365621509450104851, 295610195923697666,
-    130400795668512768, 276844714844618772
-]
-
 # this is for the ryEng discord, IDs for all the RESOURCE channels
 resourceChannels = [
-    379053997807501312, 385609182675468298, 571366462195761152,
-    571366485969338389, 571366540595691552
+    642403508125040653, 642403533429145620, 642403557890588673,
+    642403588970119208, 642403628530925578
 ]
 
-# #server-log channel on RyEng
+admins = [
+    198938374822821888, 365621509450104851, 295610195923697666,
+    276844714844618772, 130400795668512768
+]
+
+# Other important channels on RyEng
 serverLog = 484401067862392852
+admin_inbox = 642345205705474059
 
 # 0x00FFC8 Bright Turquoise (On Member Join)
 # 0xFF0055 Bright Red (On Member Leave)
@@ -45,22 +41,12 @@ client = discord.Client()
 @client.event
 async def on_message(message):
     if (isinstance(message.channel, discord.DMChannel)
-            and message.content == '!rolerequest'):
+            and message.content.startswith('!rolerequest')):
         await roleRequest(message)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith('!sendmessage')):
         await sendMessage(message)
-
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith('!listadmins')):
-        # Create an embed
-        embed = discord.Embed(title='Admins', color=0x2F67D6)
-        embed.add_field(name='Admin List',
-                        value='```\n2339\n1214\n3977\n8123\n4206```',
-                        inline=False)
-
-        await message.channel.send(embed=embed)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith('!commands')):
@@ -70,7 +56,7 @@ async def on_message(message):
         embed.add_field(
             name='Command Information',
             value=
-            '\n**!commands** - lists the commands of this bot\n\n**!listadmins** - lists the anonymous 4 digit IDs of the admins\n\n**!sendmessage <ID>** - Target an admin to send a message to (e.g. !sendmessage 2339 then press enter); use !listadmin to get an ID\n\n**!rolerequest** - Request a role or modification in your roles\n\n**!post[X]y / !postOther** - Posts contents onto the resources channel anonymously for X = [1, 2, 3, 4]',
+            '\n**!commands** - lists the commands of this bot\n\n**!sendmessage <ID>** - Target an admin to send a message to (e.g. !sendmessage 2339 then press enter); use !listadmin to get an ID\n\n**!rolerequest** - Request a role or modification in your roles\n\n**!post[X]y / !postOther** - Posts contents onto the resources channel anonymously for X = [1, 2, 3, 4]',
             inline=False)
 
         await message.channel.send(embed=embed)
@@ -78,35 +64,36 @@ async def on_message(message):
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post1y")):
         channel = client.get_channel(resourceChannels[0])
-        await channel.send(message.content.replace('!post1y ', ''))
-        await on_resource_send(message, 1)
+        await on_resource_send(message, message.channel, channel)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post2y")):
         channel = client.get_channel(resourceChannels[1])
-        await channel.send(message.content.replace('!post2y ', ''))
-        await on_resource_send(message, 2)
+        await on_resource_send(message, message.channel, channel)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post3y")):
         channel = client.get_channel(resourceChannels[2])
-        await channel.send(message.content.replace('!post3y ', ''))
-        await on_resource_send(message, 3)
+        await on_resource_send(message, message.channel, channel)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!post4y")):
-        #sends it to test server general
         channel = client.get_channel(resourceChannels[3])
-        await channel.send(message.content.replace('!post4y ', ''))
-        await on_resource_send(message, 4)
+        await on_resource_send(message, message.channel, channel)
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!postOther")):
-        #sends it to test server to a test channel
         channel = client.get_channel(resourceChannels[4])
-        # the .replace replaces the command part of the string
-        await channel.send(message.content.replace('!postOther ', ''))
-        await on_resource_send(message, 5)
+        await on_other_resource_send(message, message.channel, channel)
+
+    elif (message.content.startswith('!purge')):
+        target = client.get_channel(int(message.content[7:26]))
+        amount = int(message.content[26:])
+
+        for admin in admins:
+            if (admin == message.author.id):
+                await target.purge(limit=amount + 1)
+            return
 
     elif (isinstance(message.channel, discord.DMChannel)
           and message.content.startswith("!")):
@@ -114,50 +101,100 @@ async def on_message(message):
             'ValueError Exception: Invalid command.\n\n!commands to list commands'
         )
 
+    # Auto delete message containing this word
+    if ('nigger' in message.content.lower()):
+        await message.delete()
 
-# REQUIRES: A Message of type Discord.Message and an integer
-#           from 1 to 5.
+
+# REQUIRES: A Message of type Discord.Message and two Channels
+#           of type Discord.Channel
 # EFFECTS: Sends an embed to the #server-log channel regarding
 #          information on the resource posted.
-async def on_resource_send(message, channel_num):
-    embed = discord.Embed(title='Resource Posted', color=embedColours[4])
-    embed.set_thumbnail(url=message.author.avatar_url)
+async def on_resource_send(message, dm, channel):
+    log = client.get_channel(serverLog)
     now = datetime.datetime.now()
 
-    if (channel_num != 5):
-        embed.add_field(name=await resource_channel_name_switch(channel_num),
-                        value='**User:** ' + str(message.author.mention) +
-                        '\n**Contents:** ' + str(message.content[7:]),
-                        inline=False)
-    else:
-        embed.add_field(name=await resource_channel_name_switch(channel_num),
-                        value='**User:** ' + str(message.author.mention) +
-                        '\n**Contents:** ' + str(message.content[10:]),
-                        inline=False)
+    # Checks if the message has contents
+    if (len(message.content) < 8):
+        await message.channel.send(
+            'There is no contents in your resource post. Please try again.')
+        return
 
+    if (message.content[7] != ' '):
+        await message.channel.send(
+            'Make sure there is a space inbetween the command and your message. Please try again.'
+        )
+        return
+
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Resource Posted',
+                          description='**User: **' + message.author.mention +
+                          '\n**Channel: **' + channel.mention,
+                          color=embedColours[4])
+    embed.set_thumbnail(url=message.author.avatar_url)
+    embed.add_field(name='**Contents**',
+                    value=message.content[7:],
+                    inline=False)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    channel = client.get_channel(serverLog)
-    await channel.send(embed=embed)
+    await channel.send(message.content[8:])
+
+    # Send to #admin-inbox
+    await log.send(embed=embed)
+    # Send a verification to the member
+    await dm.send('Resource has been posted.\n\n')
+    await dm.send(embed=embed)
 
 
-# REQUIRES: An integer from 1 to 5.
-# EFFECTS: Returns a string for embed name regarding the
-#          resource channels.
-async def resource_channel_name_switch(channel_num):
-    return {
-        1: '1st Year Resource Information',
-        2: '2nd Year Resource Information',
-        3: '3rd Year Resource Information',
-        4: '4th Year Resource Information',
-        5: 'Other Resource Information'
-    }[channel_num]
+# REQUIRES: A Message of type Discord.Message and two Channels
+#           of type Discord.Channel
+# EFFECTS: Sends an embed to the #server-log channel regarding
+#          information on the resource posted.
+async def on_other_resource_send(message, dm, channel):
+    log = client.get_channel(serverLog)
+    now = datetime.datetime.now()
+
+    # Checks if the message has contents
+    if (len(message.content) < 11):
+        await message.channel.send(
+            'There is no contents in your resource post. Please try again.')
+        return
+
+    if (message.content[10] != ' '):
+        await message.channel.send(
+            'Make sure there is a space inbetween the command and your message. Please try again.'
+        )
+        return
+
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Resource Posted',
+                          description='**User: **' + message.author.mention +
+                          '\n**Channel: **' + channel.mention,
+                          color=embedColours[4])
+    embed.set_thumbnail(url=message.author.avatar_url)
+    embed.add_field(name='**Contents**',
+                    value=message.content[10:],
+                    inline=False)
+    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
+
+    await channel.send(message.content[8:])
+
+    # Send to #admin-inbox
+    await log.send(embed=embed)
+    # Send a verification to the member
+    await dm.send('Resource has been posted.\n\n')
+    await dm.send(embed=embed)
 
 
 # REQUIRES: A Message of type Discord.Message
 # EFFECTS: Logs the edited message in the #server-log channel
 @client.event
 async def on_message_edit(before, after):
+    channel = client.get_channel(serverLog)
     if (before.content == after.content):
         return
 
@@ -165,16 +202,17 @@ async def on_message_edit(before, after):
     now = datetime.datetime.now()
 
     # Create an embed
-    embed = discord.Embed(title='Edited Message', color=embedColours[2])
+    ############################################################################
+    embed = discord.Embed(title='Edited Message',
+                          description='**User: **' + before.author.mention +
+                          '\n**Channel: **' + before.channel.mention,
+                          color=embedColours[2])
     embed.set_thumbnail(url=before.author.avatar_url)
-    embed.add_field(name='Message Information',
-                    value='**User:** ' + str(before.author.mention) +
-                    '\n**Before:** ' + before.content + '\n**After:** ' +
-                    after.content,
-                    inline=True)
+    embed.add_field(name='**Before**', value=before.content, inline=False)
+    embed.add_field(name='**After**', value=after.content, inline=False)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    channel = client.get_channel(serverLog)
     await channel.send(embed=embed)
 
 
@@ -182,19 +220,22 @@ async def on_message_edit(before, after):
 # EFFECTS: Logs the deleted message in the #server-log channel
 @client.event
 async def on_message_delete(message):
+    channel = client.get_channel(serverLog)
+
     # Gets current date and time
     now = datetime.datetime.now()
 
     # Create an embed
-    embed = discord.Embed(title='Deleted Message', color=embedColours[2])
+    ############################################################################
+    embed = discord.Embed(title='Deleted Message',
+                          description='**User: **' + message.author.mention +
+                          '\n**Channel: **' + message.channel.mention,
+                          color=embedColours[2])
     embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='Message Information',
-                    value='**User:** ' + str(message.author.mention) +
-                    '\n**Contents:** ' + str(message.content),
-                    inline=False)
+    embed.add_field(name='**Contents**', value=message.content, inline=False)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    channel = client.get_channel(serverLog)
     await channel.send(embed=embed)
 
 
@@ -207,186 +248,140 @@ async def on_member_update(before, after):
         now = datetime.datetime.now()
 
         # Create an embed
-        embed = discord.Embed(title='Nickname Change', color=embedColours[3])
+        ############################################################################
+        embed = discord.Embed(title='Nickname Change',
+                              description='**User: **' + before.mention,
+                              color=embedColours[3])
         embed.set_thumbnail(url=before.avatar_url)
-        embed.add_field(name='Change Information',
-                        value='**User:** ' + str(before.mention) +
-                        '\n**Before:** ' + str(before.nick) + '\n**After:** ' +
-                        str(after.nick),
-                        inline=True)
+        embed.add_field(name='**Before**',
+                        value=str(before.nick),
+                        inline=False)
+        embed.add_field(name='**After**', value=str(after.nick), inline=False)
         embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+        ############################################################################
 
         channel = client.get_channel(serverLog)
         await channel.send(embed=embed)
 
 
 # REQUIRES: A Message of type Discord.Message
-# EFFECTS: Sends a message from a server member to a specified
-#          admin or from an admin to a specified member.
+# EFFECTS: Sends a message from a server member to #admin-inbox.
+#          Admins can then reply once to the specified message
 async def sendMessage(message):
-    server = client.get_guild(serverID)
-    # Checks if an user is an admin
-    if (await isAdmin(message.author.id)):
-        member = await targetMember(message.content[13:])
-        if (member):
-            await message.channel.send('Enter your message:')
+    channel = client.get_channel(admin_inbox)
 
-            # Checks next message is from the same user and in the DMs; saves the message to msg
-            def verifyMessage(m):
-                return isinstance(m.channel, discord.DMChannel) and (str(
-                    m.author) == str(message.author))
+    # Checks if the message has contents
+    if (len(message.content) < 13):
+        await message.channel.send(
+            'There is no contents in your message. Please try again.')
+        return
 
-            msg = await client.wait_for('message', check=verifyMessage)
+    if (message.content[12] != ' '):
+        await message.channel.send(
+            'Make sure there is a space inbetween the command and your message. Please try again.'
+        )
+        return
 
-            # Send to the target member of the server
-            await member.send(await adminCode(message.author.id) + ': ' +
-                              msg.content)
+    # Gets current date and time
+    now = datetime.datetime.now()
 
-            # Tell user that their message was sent
-            await message.channel.send('Message sent.')
-        else:
-            await message.channel.send(
-                'ValueError Exception of **!sendmessage <ID>**: there is no target to send to or invalid format.\n\nMake sure there is no message after !sendmessage <ID>\n\nExample: !sendmessage 2339\n\n!list to list available admins to send to.'
-            )
-    # Not an admin...
-    else:
-        #   Get the user ID of an admin
-        admin = await targetAdmin(message.content[13:])
-        # If it has a value...
-        if (admin):
-            await message.channel.send('Enter your message:')
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Message #' + str(message.id)[14:19],
+                          color=embedColours[4])
+    embed.set_thumbnail(url=message.author.avatar_url)
+    embed.add_field(name='**Contents**',
+                    value=message.content.replace('!sendmessage ', ''),
+                    inline=False)
+    embed.set_footer(text='User: ' + str(message.author) + '  |  ' +
+                     str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-            # Checks next message is from the same user and in the DMs; saves the message to msg
-            def verifyMessage(m):
-                return isinstance(m.channel, discord.DMChannel) and (str(
-                    m.author) == str(message.author))
+    # Send to #admin-inbox
+    await channel.send(embed=embed)
+    # Send a verification to member
+    await message.channel.send('Message has been sent.\n')
+    await message.channel.send(embed=embed)
 
-            msg = await client.wait_for('message', check=verifyMessage)
+    # Checks that the next message satisfies this format: !reply <msgID> <contents>
+    def verifyMessage(msg):
+        if (len(msg.content) > 12):
+            return msg.channel == channel and msg.content[
+                0:6] == '!reply' and msg.content[7:11] == str(
+                    message.id
+                )[14:19] and msg.content[6] == ' ' and msg.content[11] == ' '
 
-            # Send to an admin...
-            for member in server.members:
-                if (member.id == admin):
-                    await member.send('\n' + str(msg.author) + ':\n' +
-                                      msg.content + '\n')
-                    break
+        return False
 
-            # Tell user that their message was sent
-            await message.channel.send('Message sent.')
-            return
-        # admin value is none (AKA inputted <ID> is invalid)
-        else:
-            await message.channel.send(
-                'ValueError Exception of **!sendmessage <ID>**:\nNo target to send to or invalid format.\n!list to list available admins to send to.\n'
-            )
+    # This will be the message that will be used to be sent back to the member
+    msg = await client.wait_for('message', check=verifyMessage)
 
+    # Gets current date and time
+    now = datetime.datetime.now()
 
-# REQUIRES: A Discord User ID of type Integer
-# RETURNS: True if the ID passed matches with an admin
-#          Discord User ID from the admins[] array. Returns
-#          None otherwise.
-async def isAdmin(id):
-    isAdmin = None
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Reply #' + str(message.id)[14:19],
+                          color=embedColours[4])
+    embed.add_field(name='**Contents**', value=msg.content[12:], inline=False)
+    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    for admin in admins:
-        if (id == admin):
-            isAdmin = True
-            break
-        else:
-            isAdmin = False
-
-    return isAdmin
-
-
-# REQUIRES: A Discord User ID of type Iinteger
-# RETURNS: A string containing the 4 digit admin code of the
-#          specified admin.
-async def adminCode(id):
-    try:
-        return {
-            admins[0]: '2339',
-            admins[1]: '1214',
-            admins[2]: '3977',
-            admins[3]: '8123',
-            admins[4]: '4206'
-        }[id]
-    except KeyError:
-        return None
-
-
-# REQUIRES: A 4 digit admin code of type String
-# RETURNS: An Discord User ID of type Integer of an admin if
-#          the argument passed matches an admin code. Returns
-#          None otherwise.
-async def targetAdmin(id):
-    try:
-        return {
-            '2339': admins[0],
-            '1214': admins[1],
-            '3977': admins[2],
-            '8123': admins[3],
-            '4206': admins[4]
-        }[id]
-    except KeyError:
-        return None
-
-
-# REQUIRES: Discord Username of type String (PeePeePooPoo#1234)
-# RETURNS: A member of type Discord.Member. If the discord username
-#          passed in the argument matches with a server member.
-#          Returns None otherwise.
-async def targetMember(username):
-    server = client.get_guild(serverID)
-
-    for member in server.members:
-        if (username == str(member)):
-            return member
-
-    return None
+    # Send to member's DM
+    await message.channel.send(embed=embed)
+    # Send a verification to admin-inbox
+    await channel.send('Reply has been sent.\n')
+    await channel.send(embed=embed)
 
 
 # REQUIRES: A Message of type Discord.Message
-# EFFECTS: Sends a message to a random admin of their specified
+# EFFECTS: Sends a message to the #admin-inbox of their specified
 #          role request/change.
 async def roleRequest(message):
-    server = client.get_guild(serverID)
+    channel = client.get_channel(admin_inbox)
 
-    await message.channel.send(
-        'Please type in your request for a **__ROLE__** or **__ROLECHANGE__** below:'
-    )
+    # Checks if the message has contents
+    if (len(message.content) < 13):
+        await message.channel.send(
+            'There is no contents in your role request. Please try again.')
+        return
 
-    # Checks that the reply is from the requesting member and is in the DM Channel
-    def check(m):
-        return isinstance(m.channel, discord.DMChannel) and (str(
-            m.author) == str(message.author))
+    if (message.content[12] != ' '):
+        await message.channel.send(
+            'Make sure there is a space inbetween the command and your message. Please try again.'
+        )
+        return
 
-    msg = await client.wait_for('message', check=check)
+    # Gets current date and time
+    now = datetime.datetime.now()
 
-    await message.channel.send(
-        'Sending request: ' + '"' + msg.content +
-        '" to an admin.\n\nIf there are any problems or mistakes in your message above, type in !rolerequest below again.'
-    )
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Role Request',
+                          description='**User: **' + message.author.mention,
+                          color=embedColours[0])
+    embed.set_thumbnail(url=message.author.avatar_url)
+    embed.add_field(name='**Contents**',
+                    value=message.content.replace('!rolerequest ', ''),
+                    inline=False)
+    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    target = admins[random.randrange(0, len(admins))]
-
-    # Messages a random admin the role request of the member
-    for member in server.members:
-        if (member.id == target):
-            print(member.id)
-            await member.send('**__ROLE REQUEST/CHANGE__**:\n' +
-                              str(msg.author) + ': ' + msg.content)
-            # Tell their user their request/change was sent
-            await message.channel.send('Role request/change sent.')
-            break
+    # Send to #admin-inbox
+    await channel.send(embed=embed)
+    # Send a verification to member
+    await message.channel.send('Role request has been sent.\n')
+    await message.channel.send(embed=embed)
 
 
 # REQUIRES: A Member of type Discord.Member
 # EFFECTS: Sends a welcoming message to the newly joined member.
-#          Then sends a message to a random admin of their
-#          specified role request.
+#          Sends an embed to #server-log
+#          Sends a role request message to #admin-inbox
 @client.event
 async def on_member_join(member):
     await send_embed_on_member_join(member)
-    server = client.get_guild(serverID)
+    channel = client.get_channel(admin_inbox)
 
     await member.send(
         'Welcome ' + member.mention +
@@ -400,39 +395,43 @@ async def on_member_join(member):
 
     msg = await client.wait_for('message', check=check)
 
-    await member.send(
-        'Sending request: ' + '"' + msg.content +
-        '" to an admin.\n\nIf there are any problems or mistakes in your message above, type in !rolerequest below.\n\n To list commands type in !commands'
-    )
+    # Gets current date and time
+    now = datetime.datetime.now()
 
-    target = admins[random.randrange(0, len(admins))]
+    # Create an embed
+    ############################################################################
+    embed = discord.Embed(title='Role Request',
+                          description='**User: **' + member.mention,
+                          color=embedColours[0])
+    embed.set_thumbnail(url=member.avatar_url)
+    embed.add_field(name='**Contents**', value=msg.content, inline=False)
+    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    # Messages a random admin the role request of the newly joined member
-    for member in server.members:
-        if (member.id == target):
-            print(member.id)
-            await member.send('**__ROLE REQUEST/CHANGE__**:\n' +
-                              str(msg.author) + ': ' + msg.content)
-            # Tell the user their request was sent
-            await msg.channel.send('Role request sent.')
-            break
+    # Send to #admin-inbox
+    await channel.send(embed=embed)
+    # Send a verification to member
+    await member.send('Role request has been sent.\n')
+    await member.send(embed=embed)
 
 
 # REQUIRES: A Memberof type Discord.Member
 # EFFECTS: Logs when an user joins the server in the #server-log channel
 async def send_embed_on_member_join(member):
+    channel = client.get_channel(serverLog)
+
     # Gets current date and time
     now = datetime.datetime.now()
 
     # Create an embed
-    embed = discord.Embed(title='New Member Joined', color=embedColours[0])
+    ############################################################################
+    embed = discord.Embed(title='New Member Joined',
+                          description='**User: **' + str(member.mention),
+                          color=embedColours[0])
     embed.set_thumbnail(url=member.avatar_url)
-    embed.add_field(name='Member Information',
-                    value='__**User:**__ ' + str(member.mention),
-                    inline=True)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    channel = client.get_channel(serverLog)
     await channel.send(embed=embed)
 
 
@@ -440,18 +439,20 @@ async def send_embed_on_member_join(member):
 # EFFECTS: Logs when a member leaves the server in the #server-log channel
 @client.event
 async def on_member_remove(member):
+    channel = client.get_channel(serverLog)
+
     # Gets current date and time
     now = datetime.datetime.now()
 
     # Create an embed
-    embed = discord.Embed(title='Member Left', color=embedColours[1])
+    ############################################################################
+    embed = discord.Embed(title='Member Left',
+                          description='**User: **' + str(member.mention),
+                          color=embedColours[1])
     embed.set_thumbnail(url=member.avatar_url)
-    embed.add_field(name='Member Information',
-                    value='__**User:**__ ' + str(member.mention),
-                    inline=True)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
+    ############################################################################
 
-    channel = client.get_channel(serverLog)
     await channel.send(embed=embed)
 
 
