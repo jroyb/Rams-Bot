@@ -56,7 +56,7 @@ async def on_message(message):
         embed.add_field(
             name='Command Information',
             value=
-            '\n**!commands** - lists the commands of this bot\n\n**!sendmessage <ID>** - Target an admin to send a message to (e.g. !sendmessage 2339 then press enter); use !listadmin to get an ID\n\n**!rolerequest** - Request a role or modification in your roles\n\n**!post[X]y / !postOther** - Posts contents onto the resources channel anonymously for X = [1, 2, 3, 4]',
+            '\n**!commands** - lists the commands of this bot\n\n**!sendmessage <CONTENTS>** - Sends a message to the admins; the admins can reply back\n\n**!rolerequest <CONTENTS>** - Request a role or modification in your roles\n\n**!post[X]y / !postOther <CONTENTS>** - Posts contents onto the resources channel anonymously for X = [1, 2, 3, 4]',
             inline=False)
 
         await message.channel.send(embed=embed)
@@ -134,7 +134,7 @@ async def on_resource_send(message, dm, channel):
                           color=embedColours[4])
     embed.set_thumbnail(url=message.author.avatar_url)
     embed.add_field(name='**Contents**',
-                    value=message.content[7:],
+                    value=message.content[8:],
                     inline=False)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
     ############################################################################
@@ -176,12 +176,12 @@ async def on_other_resource_send(message, dm, channel):
                           color=embedColours[4])
     embed.set_thumbnail(url=message.author.avatar_url)
     embed.add_field(name='**Contents**',
-                    value=message.content[10:],
+                    value=message.content[11:],
                     inline=False)
     embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
     ############################################################################
 
-    await channel.send(message.content[8:])
+    await channel.send(message.content[11:])
 
     # Send to #admin-inbox
     await log.send(embed=embed)
@@ -330,7 +330,7 @@ async def sendMessage(message):
     # Send to member's DM
     await message.channel.send(embed=embed)
     # Send a verification to admin-inbox
-    await channel.send('Reply has been sent.\n')
+    await channel.send('Reply has been sent.\n\n')
     await channel.send(embed=embed)
 
 
@@ -370,7 +370,7 @@ async def roleRequest(message):
     # Send to #admin-inbox
     await channel.send(embed=embed)
     # Send a verification to member
-    await message.channel.send('Role request has been sent.\n')
+    await message.channel.send('Role request has been sent.\n\n')
     await message.channel.send(embed=embed)
 
 
@@ -411,7 +411,7 @@ async def on_member_join(member):
     # Send to #admin-inbox
     await channel.send(embed=embed)
     # Send a verification to member
-    await member.send('Role request has been sent.\n')
+    await member.send('Role request has been sent.\n\n')
     await member.send(embed=embed)
 
 
