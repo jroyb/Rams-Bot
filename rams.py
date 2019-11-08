@@ -5,7 +5,7 @@ import datetime
 # COPYRIGHT 2019 198938374822821888 & 365621509450104851
 # Designed and developed for the RyEng discord server.
 
-TOKEN = 'NjI3MjY1NjA1NzkxMjUyNTEy.XcHhBw.DZiMTK5JU_k_vR2LjCaTKEgqnCs'
+TOKEN = ''
 
 # RyEng Server ID
 serverID = 365554916451811341
