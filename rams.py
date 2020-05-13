@@ -1,467 +1,452 @@
 import discord
-import random
-import datetime
+import slurcheck
+import ryeng
+import ryeng_embed
+import ryeng_messaging
+import ryeng_resources
+import ryeng_rolerequest
 
-# COPYRIGHT 2019 198938374822821888 & 365621509450104851
-# Designed and developed for the RyEng discord server.
-
-TOKEN = ''
-
-# RyEng Server ID
-serverID = 365554916451811341
-
-# this is for the ryEng discord, IDs for all the RESOURCE channels
-resourceChannels = [
-    642403508125040653, 642403533429145620, 642403557890588673,
-    642403588970119208, 642403628530925578
-]
-
-admins = [
-    198938374822821888, 365621509450104851, 295610195923697666,
-    276844714844618772, 130400795668512768
-]
-
-# Other important channels on RyEng
-serverLog = 484401067862392852
-admin_inbox = 642345205705474059
-
-# 0x00FFC8 Bright Turquoise (On Member Join)
-# 0xFF0055 Bright Red (On Member Leave)
-# 0x9900FF Electric Purple (Delete/Edit Message)
-# 0x8AFF00 Chartreuse (Nickname Change)
-# 0x008080 RyEng Blue (Resource Post)
-embedColours = [0x00FFC8, 0xFF0055, 0x9900FF, 0x8AF00, 0x2F67D6]
-
+TOKEN = 'blank'
 client = discord.Client()
 
 
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Reads a message and runs any specified commands
-#          called.
 @client.event
 async def on_message(message):
-    if (isinstance(message.channel, discord.DMChannel)
-            and message.content.startswith('!rolerequest')):
-        await roleRequest(message)
+    #######################################################################################
+    if(not(isinstance(message.channel, discord.DMChannel))):
+        if(message.content.startswith('!rr')):
+            try:
+                guild = message.guild
+                mod_ch = await ryeng.get_moderators_channel(client)
+                rr_ch = await ryeng.get_rolerequests_channel(client)
+                member = message.guild.get_member(message.author.id)
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith('!sendmessage')):
-        await sendMessage(message)
+                await message.delete()
+                await ryeng_rolerequest.remove_all_roles(member)
+                await ryeng_rolerequest.function(client, guild, mod_ch, rr_ch, member)
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith('!commands')):
-        # Create an embed
-        embed = discord.Embed(title='Commands', color=0x2F67D6)
-        embed.set_thumbnail(url=client.get_guild(serverID).icon_url)
-        embed.add_field(
-            name='Command Information',
-            value=
-            '\n**!commands** - lists the commands of this bot\n\n**!sendmessage <CONTENTS>** - Sends a message to the admins; the admins can reply back\n\n**!rolerequest <CONTENTS>** - Request a role or modification in your roles\n\n**!post[X]y / !postOther <CONTENTS>** - Posts contents onto the resources channel anonymously for X = [1, 2, 3, 4]',
-            inline=False)
+                return
+            except Exception as err:
+                print('rams.py !rr')
+                print(err)
+                return
 
-        await message.channel.send(embed=embed)
+#######################################################################################
+    if(isinstance(message.channel, discord.DMChannel)):
+        if(message.content.startswith('!sm')):
+            try:
+                mod_ch = await ryeng.get_moderators_channel(client)
+                await ryeng_messaging.user_mode(client, mod_ch, message)
+                return
+            except Exception as err:
+                print('rams.py user !sm')
+                print(err)
+                return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!post1y")):
-        channel = client.get_channel(resourceChannels[0])
-        await on_resource_send(message, message.channel, channel)
+#######################################################################################
+        elif(message.content.startswith('!help')):
+            try:
+                await message.channel.send(embed=await ryeng_embed.on_help(client))
+                return
+            except Exception as err:
+                print('rams.py user !help')
+                print(err)
+                return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!post2y")):
-        channel = client.get_channel(resourceChannels[1])
-        await on_resource_send(message, message.channel, channel)
+#######################################################################################
+        elif(message.content.startswith('!post')):
+            try:
+                guild = await ryeng.get_ryeng_server(client)
+                log_ch = await ryeng.get_logs_channel(client)
+                await ryeng_resources.send(guild, log_ch, message)
+                return
+            except Exception as err:
+                print('rams.py !post')
+                print(err)
+                return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!post3y")):
-        channel = client.get_channel(resourceChannels[2])
-        await on_resource_send(message, message.channel, channel)
+        return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!post4y")):
-        channel = client.get_channel(resourceChannels[3])
-        await on_resource_send(message, message.channel, channel)
+#######################################################################################
+    if(message.channel.name == 'moderators'):
+        if(message.content.startswith('!sm')):
+            try:
+                mod_ch = await ryeng.get_moderators_channel(client)
+                await ryeng_messaging.admin_mode(client, mod_ch, message)
+            except Exception as err:
+                print('rams.py admin !sm\n')
+                print(err)
+                return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!postOther")):
-        channel = client.get_channel(resourceChannels[4])
-        await on_other_resource_send(message, message.channel, channel)
+        elif(message.content.startswith('!help')):
+            try:
+                await message.channel.send(embed=await ryeng_embed.on_admin_help(client))
+                return
+            except Exception as err:
+                print('rams.py admin !help')
+                print(err)
+                return
 
-    elif (message.content.startswith('!purge')):
-        target = client.get_channel(int(message.content[7:26]))
-        amount = int(message.content[26:])
+#######################################################################################
+        elif(message.content.startswith('!changenick')):
+            try:
+                member = message.guild.get_member(int(message.content[12:30]))
+                old_nick = member.display_name
+                new_nick = str(message.content[31:])
+            except Exception as err:
+                print('rams.py admin !changenick Try Except block 1')
+                print(err)
+                return
 
-        for admin in admins:
-            if (admin == message.author.id):
+            if message == None or member == None or old_nick == new_nick:
+                return
+
+            for admin in message.channel.members:
+                if member.id == admin.id:
+                    return
+
+            try:
+                await member.edit(nick=new_nick, reason=None)
+            except Exception as err:
+                print('rams.py admin !changenick Try Except block 2')
+                print(err)
+                return
+
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
+
+                await log_ch.send(embed=await ryeng_embed.on_nick_change(message.author, member, old_nick, new_nick))
+                return
+            except Exception as err:
+                print('rams.py admin !changenick Try Except block 3')
+                print(err)
+                return
+
+#######################################################################################
+        elif(message.content.startswith('!mute')):
+            try:
+                member = message.guild.get_member(int(message.content[5:]))
+            except Exception as err:
+                print('rams.py admin !mute Try Except block 1')
+                print(err)
+                return
+
+            if message == None or member == None:
+                return
+
+            for admin in message.channel.members:
+                if member.id == admin.id:
+                    return
+
+            for role in member.roles:
+                if role.name == 'Muted' or role.name == 'Role Request In Progress':
+                    await message.channel.send('The member is already muted or there is a role request in progress.')
+                    return
+
+            try:
+                for role in member.roles:
+                    if role.name != '@everyone' and role.id != 639226974044291102:
+                        await member.remove_roles(role, reason=None, atomic=True)
+
+                for role in member.guild.roles:
+                    if role.name == 'Muted':
+                        await member.add_roles(role, reason=None, atomic=True)
+            except:
+                print('rams.py admin !mute Try Except block 2')
+                print(err)
+                return
+
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
+
+                await log_ch.send(embed=await ryeng_embed.on_mute(message.author, member))
+                return
+            except Exception as err:
+                print('rams.py admin !mute Try Except block 3')
+                print(err)
+                return
+
+#######################################################################################
+        elif(message.content.startswith('!unmute')):
+            try:
+                server = message.guild
+                mod_ch = await ryeng.get_moderators_channel(client)
+                rr_ch = await ryeng.get_rolerequests_channel(client)
+                member = message.guild.get_member(int(message.content[7:]))
+            except Exception as err:
+                print('rams.py admin !unmute Try Except block 1')
+                print(err)
+                return
+
+            if message == None or member == None or server == None:
+                return
+            try:
+                mute_role = None
+                for role in member.roles:
+                    if role.name == 'Muted':
+                        mute_role = role
+
+                if mute_role == None:
+                    return
+
+                await member.remove_roles(mute_role, reason=None, atomic=True)
+            except Exception as err:
+                print('rams.py admin !unmute Try Except block 2')
+                print(err)
+                return
+
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
+
+                await log_ch.send(embed=await ryeng_embed.on_unmute(message.author, member))
+                await ryeng_rolerequest.function(client, server, mod_ch, rr_ch, member)
+                return
+            except Exception as err:
+                print('rams.py admin !unmute Try Except block 3')
+                print(err)
+                return
+
+#######################################################################################
+        elif(message.content.startswith('!purge')):
+            try:
+                target = client.get_channel(int(message.content[7:25]))
+                amount = int(message.content[26:])
+            except Exception as err:
+                print('rams.py admin !purge Try Except block 1')
+                print(err)
+                return
+
+            if message == None or target == None or amount == None:
+                return
+
+            try:
                 await target.purge(limit=amount + 1)
-            return
+            except Exception as err:
+                print('rams.py admin !purge Try Except block 2')
+                print(err)
+                return
 
-    elif (isinstance(message.channel, discord.DMChannel)
-          and message.content.startswith("!")):
-        await message.channel.send(
-            'ValueError Exception: Invalid command.\n\n!commands to list commands'
-        )
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
 
-    # Auto delete message containing this word
-    if ('nigger' in message.content.lower()):
-        await message.delete()
+                await log_ch.send(embed=await ryeng_embed.on_purge(message.author, target, amount))
+                return
+            except Exception as err:
+                print('rams.py admin !purge Try Except block 3')
+                print(err)
+                return
 
+#######################################################################################
+        elif(message.content.startswith('!kick')):
+            try:
+                member = message.guild.get_member(int(message.content[5:]))
+            except Exception as err:
+                print('rams.py admin !kick Try Except block 1')
+                print(err)
+                return
 
-# REQUIRES: A Message of type Discord.Message and two Channels
-#           of type Discord.Channel
-# EFFECTS: Sends an embed to the #server-log channel regarding
-#          information on the resource posted.
-async def on_resource_send(message, dm, channel):
-    log = client.get_channel(serverLog)
-    now = datetime.datetime.now()
+            if message == None or member == None:
+                return
 
-    # Checks if the message has contents
-    if (len(message.content) < 8):
-        await message.channel.send(
-            'There is no contents in your resource post. Please try again.')
-        return
+            for admin in message.channel.members:
+                if member.id == admin.id:
+                    return
 
-    if (message.content[7] != ' '):
-        await message.channel.send(
-            'Make sure there is a space inbetween the command and your message. Please try again.'
-        )
-        return
+            try:
+                for role in member.roles:
+                    if role.name == 'Role Request In Progress':
+                        await message.channel.send('The member has a role request in progress.')
+                        return
 
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Resource Posted',
-                          description='**User: **' + message.author.mention +
-                          '\n**Channel: **' + channel.mention,
-                          color=embedColours[4])
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='**Contents**',
-                    value=message.content[8:],
-                    inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
+                await message.guild.kick(member, reason=None)
+            except Exception as err:
+                print('rams.py admin !kick Try Except block 2')
+                print(err)
+                return
 
-    await channel.send(message.content[8:])
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
 
-    # Send to #admin-inbox
-    await log.send(embed=embed)
-    # Send a verification to the member
-    await dm.send('Resource has been posted.\n\n')
-    await dm.send(embed=embed)
+                await log_ch.send(embed=await ryeng_embed.member_kick(message.author, member))
+                return
+            except Exception as err:
+                print('rams.py admin !kick Try Except block 2')
+                print(err)
+                return
 
+#######################################################################################
+        elif(message.content.startswith('!ban')):
+            try:
+                user = client.get_user(int(message.content[4:]))
+            except Exception as err:
+                print('rams.py admin !ban Try Except block 1')
+                print(err)
+                return
 
-# REQUIRES: A Message of type Discord.Message and two Channels
-#           of type Discord.Channel
-# EFFECTS: Sends an embed to the #server-log channel regarding
-#          information on the resource posted.
-async def on_other_resource_send(message, dm, channel):
-    log = client.get_channel(serverLog)
-    now = datetime.datetime.now()
+            # If no user is found return
+            if message == None or user == None:
+                return
 
-    # Checks if the message has contents
-    if (len(message.content) < 11):
-        await message.channel.send(
-            'There is no contents in your resource post. Please try again.')
-        return
+            for admin in message.channel.members:
+                if user.id == admin.id:
+                    return
 
-    if (message.content[10] != ' '):
-        await message.channel.send(
-            'Make sure there is a space inbetween the command and your message. Please try again.'
-        )
-        return
+            for ban in await message.guild.bans():
+                if ban.user.id == user.id:
+                    return
 
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Resource Posted',
-                          description='**User: **' + message.author.mention +
-                          '\n**Channel: **' + channel.mention,
-                          color=embedColours[4])
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='**Contents**',
-                    value=message.content[11:],
-                    inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
+            try:
+                for role in member.roles:
+                    if role.name == 'Role Request In Progress':
+                        await message.channel.send('The member has a role request in progress.')
+                        return
 
-    await channel.send(message.content[11:])
+                await message.guild.ban(user, reason=None, delete_message_days=0)
+            except:
+                print('rams.py admin !ban Try Except block 2')
+                print(err)
+                return
 
-    # Send to #admin-inbox
-    await log.send(embed=embed)
-    # Send a verification to the member
-    await dm.send('Resource has been posted.\n\n')
-    await dm.send(embed=embed)
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
 
+                await log_ch.send(embed=await ryeng_embed.member_ban(message.author, user))
+                return
+            except Exception as err:
+                print('rams.py admin !ban Try Except block 3')
+                print(err)
+                return
 
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Logs the edited message in the #server-log channel
-@client.event
-async def on_message_edit(before, after):
-    channel = client.get_channel(serverLog)
-    if (before.content == after.content):
-        return
+#######################################################################################
+        elif(message.content.startswith('!unban')):
+            try:
+                user = client.get_user(int(message.content[6:]))
+            except Exception as err:
+                print('rams.py admin !unban Try Except block 1')
+                print(err)
+                return
 
-    # Gets current date and time
-    now = datetime.datetime.now()
+            if message == None or user == None:
+                return
 
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Edited Message',
-                          description='**User: **' + before.author.mention +
-                          '\n**Channel: **' + before.channel.mention,
-                          color=embedColours[2])
-    embed.set_thumbnail(url=before.author.avatar_url)
-    embed.add_field(name='**Before**', value=before.content, inline=False)
-    embed.add_field(name='**After**', value=after.content, inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
+            try:
+                for ban in await message.guild.bans():
+                    if ban.user.id == user.id:
+                        await message.guild.unban(user)
+                        break
+            except Exception as err:
+                print('rams.py admin !unban Try Except block 2')
+                print(err)
+                return
 
-    await channel.send(embed=embed)
+            try:
+                log_ch = await ryeng.get_logs_channel(client)
+                if log_ch == None:
+                    return
 
+                await log_ch.send(embed=await ryeng_embed.member_unban(message.author, user))
+                return
+            except Exception as err:
+                print('rams.py admin !unban Try Except block 3')
+                print(err)
+                return
 
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Logs the deleted message in the #server-log channel
-@client.event
-async def on_message_delete(message):
-    channel = client.get_channel(serverLog)
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Deleted Message',
-                          description='**User: **' + message.author.mention +
-                          '\n**Channel: **' + message.channel.mention,
-                          color=embedColours[2])
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='**Contents**', value=message.content, inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    await channel.send(embed=embed)
+    await slurcheck.check(message)
 
 
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Logs a nickname change in the #server-log channel
-@client.event
-async def on_member_update(before, after):
-    if (before.nick != after.nick):
-        # Gets current date and time
-        now = datetime.datetime.now()
-
-        # Create an embed
-        ############################################################################
-        embed = discord.Embed(title='Nickname Change',
-                              description='**User: **' + before.mention,
-                              color=embedColours[3])
-        embed.set_thumbnail(url=before.avatar_url)
-        embed.add_field(name='**Before**',
-                        value=str(before.nick),
-                        inline=False)
-        embed.add_field(name='**After**', value=str(after.nick), inline=False)
-        embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-        ############################################################################
-
-        channel = client.get_channel(serverLog)
-        await channel.send(embed=embed)
-
-
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Sends a message from a server member to #admin-inbox.
-#          Admins can then reply once to the specified message
-async def sendMessage(message):
-    channel = client.get_channel(admin_inbox)
-
-    # Checks if the message has contents
-    if (len(message.content) < 13):
-        await message.channel.send(
-            'There is no contents in your message. Please try again.')
-        return
-
-    if (message.content[12] != ' '):
-        await message.channel.send(
-            'Make sure there is a space inbetween the command and your message. Please try again.'
-        )
-        return
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Message #' + str(message.id)[14:19],
-                          color=embedColours[4])
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='**Contents**',
-                    value=message.content.replace('!sendmessage ', ''),
-                    inline=False)
-    embed.set_footer(text='User: ' + str(message.author) + '  |  ' +
-                     str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    # Send to #admin-inbox
-    await channel.send(embed=embed)
-    # Send a verification to member
-    await message.channel.send('Message has been sent.\n')
-    await message.channel.send(embed=embed)
-
-    # Checks that the next message satisfies this format: !reply <msgID> <contents>
-    def verifyMessage(msg):
-        if (len(msg.content) > 12):
-            return msg.channel == channel and msg.content[
-                0:6] == '!reply' and msg.content[7:11] == str(
-                    message.id
-                )[14:19] and msg.content[6] == ' ' and msg.content[11] == ' '
-
-        return False
-
-    # This will be the message that will be used to be sent back to the member
-    msg = await client.wait_for('message', check=verifyMessage)
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Reply #' + str(message.id)[14:19],
-                          color=embedColours[4])
-    embed.add_field(name='**Contents**', value=msg.content[12:], inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    # Send to member's DM
-    await message.channel.send(embed=embed)
-    # Send a verification to admin-inbox
-    await channel.send('Reply has been sent.\n\n')
-    await channel.send(embed=embed)
-
-
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Sends a message to the #admin-inbox of their specified
-#          role request/change.
-async def roleRequest(message):
-    channel = client.get_channel(admin_inbox)
-
-    # Checks if the message has contents
-    if (len(message.content) < 13):
-        await message.channel.send(
-            'There is no contents in your role request. Please try again.')
-        return
-
-    if (message.content[12] != ' '):
-        await message.channel.send(
-            'Make sure there is a space inbetween the command and your message. Please try again.'
-        )
-        return
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Role Request',
-                          description='**User: **' + message.author.mention,
-                          color=embedColours[0])
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.add_field(name='**Contents**',
-                    value=message.content.replace('!rolerequest ', ''),
-                    inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    # Send to #admin-inbox
-    await channel.send(embed=embed)
-    # Send a verification to member
-    await message.channel.send('Role request has been sent.\n\n')
-    await message.channel.send(embed=embed)
-
-
-# REQUIRES: A Member of type Discord.Member
-# EFFECTS: Sends a welcoming message to the newly joined member.
-#          Sends an embed to #server-log
-#          Sends a role request message to #admin-inbox
 @client.event
 async def on_member_join(member):
-    await send_embed_on_member_join(member)
-    channel = client.get_channel(admin_inbox)
+    try:
+        mod_ch = await ryeng.get_moderators_channel(client)
+        rr_ch = await ryeng.get_rolerequests_channel(client)
+        log_ch = await ryeng.get_logs_channel(client)
 
-    await member.send(
-        'Welcome ' + member.mention +
-        ' to the **__RyEng__** discord server!\n\nPlease type in your year, dicipline, and whether or not you are a ryerson student below:'
-    )
+        if mod_ch == None or rr_ch == None or log_ch == None:
+            return
 
-    # Checks that the reply is from the joined member and is in the DM Channel
-    def check(m):
-        return isinstance(m.channel,
-                          discord.DMChannel) and (str(member) == str(m.author))
-
-    msg = await client.wait_for('message', check=check)
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Role Request',
-                          description='**User: **' + member.mention,
-                          color=embedColours[0])
-    embed.set_thumbnail(url=member.avatar_url)
-    embed.add_field(name='**Contents**', value=msg.content, inline=False)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    # Send to #admin-inbox
-    await channel.send(embed=embed)
-    # Send a verification to member
-    await member.send('Role request has been sent.\n\n')
-    await member.send(embed=embed)
+        await log_ch.send(embed=await ryeng_embed.new_member(member))
+        await ryeng_rolerequest.function(client, member.guild, mod_ch, rr_ch, member)
+        return
+    except Exception as err:
+        print('rams.py on_member_join(member)')
+        print(err)
+        return
 
 
-# REQUIRES: A Memberof type Discord.Member
-# EFFECTS: Logs when an user joins the server in the #server-log channel
-async def send_embed_on_member_join(member):
-    channel = client.get_channel(serverLog)
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='New Member Joined',
-                          description='**User: **' + str(member.mention),
-                          color=embedColours[0])
-    embed.set_thumbnail(url=member.avatar_url)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    await channel.send(embed=embed)
-
-
-# REQUIRES: A Message of type Discord.Message
-# EFFECTS: Logs when a member leaves the server in the #server-log channel
 @client.event
 async def on_member_remove(member):
-    channel = client.get_channel(serverLog)
-
-    # Gets current date and time
-    now = datetime.datetime.now()
-
-    # Create an embed
-    ############################################################################
-    embed = discord.Embed(title='Member Left',
-                          description='**User: **' + str(member.mention),
-                          color=embedColours[1])
-    embed.set_thumbnail(url=member.avatar_url)
-    embed.set_footer(text=str(now.strftime("%Y-%m-%d %H:%M")))
-    ############################################################################
-
-    await channel.send(embed=embed)
+    try:
+        log_ch = await ryeng.get_logs_channel(client)
+        if log_ch == None:
+            return
+        await log_ch.send(embed=await ryeng_embed.member_left(member))
+        return
+    except Exception as err:
+        print('rams.py on_member_remove(member)')
+        print(err)
+        return
 
 
-# EFFECTS: Prints out the name and Discord User ID of the bot
-#          in the terminal once it has connected and initialized.
+@client.event
+async def on_message_edit(before, after):
+    try:
+        if(after.guild.name != 'RyEng'):
+            return
+    except:
+        return
+
+    try:
+        log_ch = await ryeng.get_logs_channel(client)
+        if log_ch == None:
+            return
+
+        if (before.content == after.content):
+            return
+
+        await slurcheck.check(after)
+        await log_ch.send(embed=await ryeng_embed.on_edit(before, after))
+        return
+    except Exception as err:
+        print('rams.py on_message_edit(before, after)')
+        print(err)
+        return
+
+
+@client.event
+async def on_message_delete(message):
+    try:
+        if(message.guild.name != 'RyEng') or message.embeds != []:
+            return
+    except:
+        return
+
+    try:
+        log_ch = await ryeng.get_logs_channel(client)
+        if log_ch == None:
+            return
+
+        await log_ch.send(embed=await ryeng_embed.on_delete(message))
+    except Exception as err:
+        print('rams.py on_message_delete(message)')
+        print(err)
+        return
+
+
 @client.event
 async def on_ready():
-    print('LOGGED ON: ' + str(client.user.name) + '\nID: ' +
-          str(client.user.id))
+    print('LOGGED ON: ' + str(client.user.name) + '\nID: ' + str(client.user.id))
 
 
 client.run(TOKEN)
